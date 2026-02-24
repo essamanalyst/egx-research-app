@@ -1,0 +1,167 @@
+// Prisma Schema for Egyptian Stock Market Research Tool
+// Supports both SQLite (local) and PostgreSQL (Vercel)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Egyptian Companies - Core Entity
+model EgyptianCompany {
+  id              String   @id @default(cuid())
+  tickerSymbol    String   @unique
+  nameEn          String
+  nameAr          String
+  sector          String
+  sectorAr        String
+  description     String?
+  website         String?
+  foundedYear     Int?
+  employees       Int?
+  headquarters    String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  financialData   FinancialData[]
+  stockPrices     StockPrice[]
+  sentimentScores SentimentScore[]
+  tradingData     TradingData[]
+}
+
+model FinancialData {
+  id              String   @id @default(cuid())
+  companyId       String
+  period          String
+  periodType      String
+  reportDate      DateTime
+
+  marketCap       Float?
+  stockClosePrice Float?
+  debtToEquity    Float?
+  totalDebt       Float?
+  shortTermDebt   Float?
+  longTermDebt    Float?
+  totalEquity     Float?
+  debtToAssets    Float?
+  roa             Float?
+  roe             Float?
+  eps             Float?
+  currentRatio    Float?
+  firmSize        Float?
+  salesGrowth     Float?
+  totalAssets     Float?
+  totalRevenue    Float?
+  netIncome       Float?
+  operatingIncome Float?
+  freeCashFlow    Float?
+  dividendYield   Float?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  company         EgyptianCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, period])
+  @@index([companyId])
+  @@index([period])
+}
+
+model StockPrice {
+  id              String   @id @default(cuid())
+  companyId       String
+  date            DateTime
+  open            Float?
+  high            Float?
+  low             Float?
+  close           Float?
+  volume          Float?
+  adjustedClose   Float?
+
+  createdAt       DateTime @default(now())
+
+  company         EgyptianCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, date])
+  @@index([companyId])
+  @@index([date])
+}
+
+model TradingData {
+  id              String   @id @default(cuid())
+  companyId       String
+  date            DateTime
+
+  tradingVolume   Float?
+  volatility      Float?
+  beta            Float?
+  avgVolume30d    Float?
+  priceChange1d   Float?
+  priceChange7d   Float?
+  priceChange30d  Float?
+  priceChangeYtd  Float?
+
+  createdAt       DateTime @default(now())
+
+  company         EgyptianCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, date])
+  @@index([companyId])
+}
+
+model SentimentScore {
+  id              String   @id @default(cuid())
+  companyId       String
+  date            DateTime
+
+  sentimentScore  Float
+  sentimentLabel  String
+  newsCount       Int      @default(0)
+  confidence      Float?
+  sourceKeywords  String?
+
+  createdAt       DateTime @default(now())
+
+  company         EgyptianCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, date])
+  @@index([companyId])
+  @@index([date])
+}
+
+model MacroIndicator {
+  id              String   @id @default(cuid())
+  date            DateTime
+  indicatorType   String
+
+  usdToEgp        Float?
+  inflationRate   Float?
+  coreInflation   Float?
+  interestRate    Float?
+  discountRate    Float?
+  egx30Value      Float?
+  egx30Change     Float?
+  gdpGrowth       Float?
+  unemployment    Float?
+  foreignReserves Float?
+
+  createdAt       DateTime @default(now())
+
+  @@unique([date, indicatorType])
+  @@index([date])
+  @@index([indicatorType])
+}
+
+model ResearchSession {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  filters         String?
+  selectedCompanies String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
